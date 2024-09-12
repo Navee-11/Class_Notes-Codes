@@ -249,28 +249,109 @@
 //These are nothing but prechecks in the request and response
 
 // Without the use of middleware we are doing the precheck in the request
+// const express = require("express");
+// const app = express();
+// const port = 3001;
+
+// app.get("/health-checkup", function (req, res) {
+//   const username = req.headers.username;
+//   const password = req.headers.password;
+//   const kidneyId = req.query.id;
+//   // https://ccd24d48-22c1-450b-b4dd-9062715bc551-00-3sknh0jm49xtt.pike.replit.dev:3001/health-checkup?id=1
+//   if (username != "naveen" || password != "nav123") {
+//     res.send("Invalid credentials");
+//     return;
+//   }
+//   if (kidneyId != 1 && kidneyId != 2) {
+//     res.send("Invalid kidney id");
+//     return;
+//   }
+//   res.send("Health checkup done");
+// });
+
+// // app.listen(port, () => {
+// //   console.log(`App listening on port ${port}`);
+// // });
+
+// // let's say we want to add another route.Input needs to be same then this leads to code repetation
+
+// app.put("/replace-kidney", function (req, res) {
+//   const username = req.headers.username;
+//   const password = req.headers.password;
+//   const kidneyId = req.query.id;
+//   // https://ccd24d48-22c1-450b-b4dd-9062715bc551-00-3sknh0jm49xtt.pike.replit.dev:3001/health-checkup?id=1
+//   if (username != "naveen" || password != "nav123") {
+//     res.send("Invalid credentials");
+//     return;
+//   }
+//   if (kidneyId != 1 && kidneyId != 2) {
+//     res.send("Invalid kidney id");
+//     return;
+//   }
+//   res.send("Health checkup done");
+// });
+
+// app.listen(port, () => {
+//   console.log(`App listening on port ${port}`);
+// });
+
+//**************************************************************************************************************** */
+//This leads to unnecessary code repetition and code becomes ugly.
+//We can also wrapper these validations into the function the code might get shortened but still repetition is present.
+//So if we want to perform bunch of prechecks we move to some other place called middlewares
+
+// const express = require("express");
+// const app = express();
+// const port = 3000;
+// app.get(
+//   "/",
+//   (req, res) => console.log("Hi from cb1"),
+//   (req, res) => console.log("Hi from cb2")
+// );
+// app.listen(port);
+
+// const express = require("express");
+// const app = express();
+// const port = 3000;
+// app.get(
+//   "/",
+//   (req, res, next) => {
+//     console.log("Hi from cb1");
+//     next();
+//   },
+//   (req, res, next) => {
+//     console.log("Hi from cb2");
+//     next();
+//   },
+//   (req, res) => res.send("All Validation completed")
+// );
+// app.listen(port);
+
+//Middleware implementation
 const express = require("express");
 const app = express();
 const port = 3001;
 
-app.get("/health-checkup", function (req, res) {
+const userMiddleWare = (req, res, next) => {
   const username = req.headers.username;
   const password = req.headers.password;
-  const kidneyId = req.query.id;
+
   // https://ccd24d48-22c1-450b-b4dd-9062715bc551-00-3sknh0jm49xtt.pike.replit.dev:3001/health-checkup?id=1
   if (username != "naveen" || password != "nav123") {
     res.send("Invalid credentials");
-    return;
-  }
+  } else next();
+};
+
+const kidneyMiddleware = (req, res, next) => {
+  const kidneyId = req.query.id;
   if (kidneyId != 1 && kidneyId != 2) {
     res.send("Invalid kidney id");
-    return;
-  }
-  res.send("Health checkup done");
+  } else next();
+};
+app.get("/health-checkup", userMiddleWare, kidneyMiddleware, (req, res) => {
+  res.send("The kidneys are fine and Healthy");
 });
 
 app.listen(port, () => {
   console.log(`App listening on port ${port}`);
 });
-
-// let's say we want to add another route
