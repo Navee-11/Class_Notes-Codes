@@ -302,7 +302,7 @@
 
 // const express = require("express");
 // const app = express();
-// const port = 3000;
+// const port = 3001;
 // app.get(
 //   "/",
 //   (req, res) => console.log("Hi from cb1"),
@@ -328,30 +328,174 @@
 // app.listen(port);
 
 //Middleware implementation
+// const express = require("express");
+// const app = express();
+// const port = 3001;
+
+// const userMiddleWare = (req, res, next) => {
+//   const username = req.headers.username;
+//   const password = req.headers.password;
+
+//   // http://localhost:3001/health-checkup?id=1
+//   if (username != "naveen" || password != "nav123") {
+//     res.send("Invalid credentials");
+//   } else next();
+// };
+
+// const kidneyMiddleware = (req, res, next) => {
+//   const kidneyId = req.query.id;
+//   if (kidneyId != 1 && kidneyId != 2) {
+//     res.send("Invalid kidney id");
+//   } else next();
+// };
+// app.get("/health-checkup", userMiddleWare, kidneyMiddleware, (req, res) => {
+//   res.send("The kidneys are fine and Healthy");
+// });
+
+// app.listen(port, () => {
+//   console.log(`App listening on port ${port}`);
+// });
+
+//Popular usecase of middleware is to perform authentication,ratelimiting and count the number requests
+
+// const express = require("express");
+// const app = express();
+// const port = 3001;
+// let countRequests = 0;
+// const noofRequests = (req, res, next) => {
+//   countRequests++;
+//   console.log(countRequests);
+//   next(); //This needs to present in all the middleware orelse next middleware or callback functions can't be invoked
+// };
+// app.get("/", noofRequests, (req, res) => {
+//   res.send("Hello World");
+// });
+// app.post("/", noofRequests, (req, res) => {
+//   res.send("Hi there");
+// });
+// app.listen(port, () => {
+//   console.log(`App listening on port ${port}`);
+// });
+
+// We have come across app.use() which is used to add middleware to the app.i.e., app.use(express.json()); this adds the middleware to all the routes by default
+
+// let's say we have get and post request in our app
+// If you mention app.use(noofRequests);
+//Why not app.use(noofRequests()) because express.json() will return a function not any value so we use express.JSON() not just express.json
+// We can elminate mentioning the middleware in all the request method
+
+// app.use(noofRequests);
+
+// app.get("/", noofRequests, (req, res) => {
+//   res.send("Hello World");
+// });
+// app.post("/", noofRequests, (req, res) => {
+//   res.send("Hi there");
+// });
+
+//We don't have to explicitly mention the middleware in all the request methods when app.use(middleware) is used
+
+//***************************************************************************************************************************************************** */
+
+// Why do we need input validation what if the user sends invalid body
+
+// const express = require("express");
+// const { error } = require("console");
+// const app = express();
+// const port = 3001;
+
+// app.use(express.json());
+
+// app.post("/health-checkup", (req, res) => {
+//We are expecting a request body with the following structure
+// { "kidneys" :[1,2,3] }
+// Let's say the use sends empty body or are string it is your responsibility to handle the request  we can add multiple checks and early returns
+//   const kidneys = req.body.kidneys;
+//   const kidneyLength = kidneys.length;
+
+//   res.send("You have " + kidneyLength + " kidneys");
+// });
+// app.listen(port);
+
+// If invalid request is sent user can see the error
+
+//This errors can be tackled with the help of error handling middlewares also called as global catches
+
+// app.use((err, req, res, next) => {
+//   res.status(500).send("An internal error as occured");
+// });
+
+//With the help of this we are catching the error and also hiding the error by sending a message
+
+//Better way to do the input validation. Zod is nodejs library which helps in validating the request body
+
+//Zod library
+
+// const express = require("express");
+// const zod = require("zod");
+// const app = express();
+// const port = 3001;
+// const schema = zod.array(zod.number());
+
+// app.use(express.json());
+
+// app.post("/health-checkup", (req, res) => {
+//   const kidneys = req.body.kidneys;
+//   const response = schema.safeParse(kidneys);
+
+//   res.send(response);
+// });
+// app.listen(port);
+
+// const express = require("express");
+// const z = require("zod");
+// const app = express();
+// const port = 3001;
+// // const schema = zod.array(zod.number());
+
+// const schema = z.object({
+//   email: z.string(),
+//   password: z.string(),
+//   country: z.literal("IN").or(z.literal("USA")),
+//   kidneys: z.array(z.number()),
+// });
+// app.use(express.json());
+
+// app.post("/health-checkup", (req, res) => {
+//   const kidneys = req.body.kidneys;
+//   const response = schema.safeParse(kidneys);
+//   if (!response.success)
+//     res.status(411).json({ "Invalid request": response.error.details });
+//   else res.send(response);
+// });
+// app.listen(port);
+
 const express = require("express");
 const app = express();
-const port = 3001;
 
-const userMiddleWare = (req, res, next) => {
-  const username = req.headers.username;
-  const password = req.headers.password;
-
-  // https://ccd24d48-22c1-450b-b4dd-9062715bc551-00-3sknh0jm49xtt.pike.replit.dev:3001/health-checkup?id=1
-  if (username != "naveen" || password != "nav123") {
-    res.send("Invalid credentials");
-  } else next();
-};
-
-const kidneyMiddleware = (req, res, next) => {
-  const kidneyId = req.query.id;
-  if (kidneyId != 1 && kidneyId != 2) {
-    res.send("Invalid kidney id");
-  } else next();
-};
-app.get("/health-checkup", userMiddleWare, kidneyMiddleware, (req, res) => {
-  res.send("The kidneys are fine and Healthy");
+// Middleware 1: Runs for all requests
+app.use((req, res, next) => {
+  console.log("Middleware 1");
+  next(); // Pass control to the next middleware
 });
 
-app.listen(port, () => {
-  console.log(`App listening on port ${port}`);
+// Middleware 2: Runs for all requests
+app.use((req, res, next) => {
+  console.log("Middleware 2");
+  next(); // Pass control to the next middleware
+});
+
+// Route handler
+app.get("/", (req, res) => {
+  res.send("Hello, World!");
+});
+
+// Middleware 3: Runs only for requests to '/api'
+app.use("/api", (req, res, next) => {
+  console.log("API Middleware");
+  next(); // Pass control to the next middleware or route handler
+});
+
+app.listen(3000, () => {
+  console.log("Server is running on port 3000");
 });
